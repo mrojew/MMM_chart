@@ -11,7 +11,10 @@
         <local:MainViewModel/>
     </Window.DataContext>
     <Grid>
-        <Grid.RowDefinitions>
+        <!--view control-->
+    
+        <!--            -->
+            <Grid.RowDefinitions>
             <RowDefinition Height="6*" />
             <RowDefinition Height="1*" />
             <RowDefinition Height="1*" />
@@ -22,11 +25,11 @@
         </Grid.ColumnDefinitions>
 
         <!--Chart-->
-        <oxy:Plot Title="{Binding Title}" Grid.Row="0" Grid.Column="2">
-            <oxy:Plot.Series>
-                <oxy:LineSeries ItemsSource="{Binding Points}"/>
-            </oxy:Plot.Series>
-        </oxy:Plot>
+
+        <oxy:PlotView x:Name="DataPlotView" 
+                      Grid.Row="0" 
+                      Grid.Column="1"
+                      Model="{Binding Plot}"/>
 
         <!-- Menu grid -->
         <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="4" 
@@ -37,7 +40,16 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Button Grid.Row="0" Width="100" Margin="5" IsEnabled="False">CHART</Button>
+            <Button 
+                Command="{Binding StartButton}" 
+                CommandParameter="START"
+                Grid.Row="0" 
+                Width="100" 
+                Margin="17,5,17,0" 
+                Height="20" 
+                VerticalAlignment="Top">
+                CHART
+            </Button>
             <Button Grid.Row="1" Width="100" Margin="5" IsEnabled="False">DISPLAY</Button>
             <TextBlock 
             Name="TESTER"
@@ -75,7 +87,7 @@
             Width="80" 
             Height="20"
             HorizontalAlignment="Right" 
-            Text="500"/>
+            Text="1000"/>
         <!--Bottom bar-->
         <Grid Grid.Row="2" Grid.Column="1">
             <Grid.ColumnDefinitions>
@@ -111,7 +123,7 @@
                 HorizontalAlignment="Left" Grid.ColumnSpan="2">
                 UPDATE CONFIG
             </Button>
-            
+
 
 
         </Grid>

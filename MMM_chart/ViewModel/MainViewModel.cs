@@ -21,27 +21,26 @@ namespace MMM_chart.ViewModel
 
     public class MainViewModel : INotifyPropertyChanged
     {
+        #region SwitchView
+        
+
+        #endregion
 
         public string Title { get; private set; }
-        public IList<DataPoint> Points { get; private set; }
         public string IpAddress { get; private set; }
         public string Roll { get; private set; }
+        public string Pitch { get; private set; }
+        public string Yaw { get; private set; }
         public ButtonCommand StartButton { get; set; }
         public ButtonCommand StopButton { get; set; }
 
         System.Windows.Threading.DispatcherTimer dispatcherTimer;
 
 
-        private void updateTester()
-        {
-            var url = "http://192.168.0.106/data.py";
-            var serverData = ServerHandling._download_serialized_json_data<ServerData>(url);
-            this.Roll = serverData.roll.ToString();
-            OnPropertyChanged("Roll");
-        }
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
-            updateTester();
+            //updateTester();
+            updateData();
         }
 
 
@@ -56,27 +55,86 @@ namespace MMM_chart.ViewModel
 
         public void StopTimer()
         {
-            
+            dispatcherTimer.Stop();
+            dispatcherTimer = null;
         }
+
+        #region Plot
+
+        public PlotModel Plot { get; set; }
+
+        private Configure config = new Configure();
+
+        private string base_url = "http://192.168.0.106/data.py";
+
+        public double i = 0.0;
+
+        private void UpdatePlot(double t, double d, PlotModel Plot_n, int i)
+        {
+            LineSeries lineSeries = Plot_n.Series[i] as LineSeries;
+            
+
+            lineSeries.Points.Add(new DataPoint(t, d));
+
+            if (lineSeries.Points.Count > config.MaxSampleNumber)
+                lineSeries.Points.RemoveAt(0);
+
+            if (t >= config.XAxisMax)
+            {
+                Plot_n.Axes[0].Minimum = (t - config.XAxisMax);
+                Plot_n.Axes[0].Maximum = t + config.SampleTime / 1000.0; ;
+            }
+
+            Plot_n.InvalidatePlot(true);
+        }
+
+        public void updateData()
+        {
+            var data = ServerHandling._download_serialized_json_data<ServerData>(base_url);
+           // this.Roll = data.roll.ToString();
+            UpdatePlot(i, data.roll, Plot,0);
+            UpdatePlot(i, data.pitch, Plot,1);
+            UpdatePlot(i, data.yaw, Plot,2);
+            //OnPropertyChanged("Roll");
+            i += config.SampleTime / 1000.0;
+        }
+
+        #endregion
 
         public MainViewModel()
         {
             this.IpAddress = "192.168.0.106";
-            this.Title = "Example 2";
-            this.Points = new List<DataPoint>
-                              {
-                                  new DataPoint(0, 4),
-                                  new DataPoint(10, 13),
-                                  new DataPoint(20, 15),
-                                  new DataPoint(30, 16),
-                                  new DataPoint(40, 12),
-                                  new DataPoint(50, 12)
-                              };
-            
+            this.Title = "RPY Chart";
+
+           
+            Plot = new PlotModel { Title = "Angle" };
+
+            Plot.Axes.Add(new LinearAxis()
+            {
+                Position = AxisPosition.Bottom,
+                Minimum = 0,
+                Maximum = config.XAxisMax,
+                Key = "Horizontal",
+                Unit = "sec",
+                Title = "Time"
+            });
+            Plot.Axes.Add(new LinearAxis()
+            {
+                Position = AxisPosition.Left,
+                Minimum = 0,
+                Maximum = 360,
+                Key = "Vertical",
+                Unit = "Degrees",
+                Title = "Angle"
+            });
+            Plot.Series.Add(new LineSeries() { Title = "Roll", Color = OxyColor.Parse("#cd0000") });
+            Plot.Series.Add(new LineSeries() { Title = "Pitch", Color = OxyColor.Parse("#4876FF") });
+            Plot.Series.Add(new LineSeries() { Title = "Yaw", Color = OxyColor.Parse("#047806") });
+
+            #region buttons
             StartButton = new ButtonCommand(StartTimer);
             StopButton = new ButtonCommand(StopTimer);
-            Roll = "Robert Kubica";
-
+            #endregion
         }
 
 
